@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "840716021808",
+    "project_id": "safekart-bc101",
+    "storage_bucket": "safekart-bc101.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:840716021808:android:80c0c69aa8ee67e13a7df5",
+        "android_client_info": {
+          "package_name": "com.safekart.safekart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCvX2q6m3BUoSUHGvdDU3MDP-dlb4GqCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

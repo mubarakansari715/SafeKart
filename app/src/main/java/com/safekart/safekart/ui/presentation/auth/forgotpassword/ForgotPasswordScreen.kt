@@ -50,8 +50,8 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.safekart.safekart.ui.presentation.components.AnimatedAppLabel
-import com.safekart.safekart.ui.presentation.components.WavyBackground
+import com.safekart.safekart.ui.components.AnimatedAppLabel
+import com.safekart.safekart.ui.components.WavyBackground
 import com.safekart.safekart.ui.theme.Background
 import com.safekart.safekart.ui.theme.SafeKartTheme
 

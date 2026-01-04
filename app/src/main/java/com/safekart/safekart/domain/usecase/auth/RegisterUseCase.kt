@@ -18,14 +18,22 @@ class RegisterUseCase @Inject constructor(
         password: String,
         username: String
     ): Result<FirebaseUser> {
-        return authRepository.createUserWithEmailAndPassword(email, password)
-            .onSuccess { user ->
-                // Create user document in Firestore
-                userRepository.createUser(user.uid, email, username)
-                    .onFailure { throwable ->
-                        throw Exception("Account created but failed to save user data: ${throwable.message}")
-                    }
-            }
+        val authResult = authRepository.createUserWithEmailAndPassword(email, password)
+        
+        val user = authResult.getOrElse { exception ->
+            return Result.failure(exception)
+        }
+        
+        // Create user document in Firestore
+        val userCreationResult = userRepository.createUser(user.uid, email, username)
+        
+        return if (userCreationResult.isSuccess) {
+            Result.success(user)
+        } else {
+            Result.failure(
+                Exception("Account created but failed to save user data: ${userCreationResult.exceptionOrNull()?.message}")
+            )
+        }
     }
 }
 

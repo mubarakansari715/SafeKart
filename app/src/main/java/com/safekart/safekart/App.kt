@@ -8,6 +8,7 @@ import dagger.hilt.android.HiltAndroidApp
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        // init
         FirebaseApp.initializeApp(this)
     }
 }

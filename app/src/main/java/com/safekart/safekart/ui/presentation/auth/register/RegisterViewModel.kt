@@ -3,7 +3,6 @@ package com.safekart.safekart.ui.presentation.auth.register
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuthException
 import com.safekart.safekart.domain.usecase.auth.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -157,7 +156,7 @@ class RegisterViewModel @Inject constructor(
             val password = _uiState.value.password
             val name = _uiState.value.name.trim()
 
-            registerUseCase(email, password, name)
+            registerUseCase(email, password, name, null)
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -165,16 +164,17 @@ class RegisterViewModel @Inject constructor(
                     )
                 }
                 .onFailure { exception ->
-                    val errorMessage = when (exception) {
-                        is FirebaseAuthException -> {
-                            when (exception.errorCode) {
-                                "ERROR_INVALID_EMAIL" -> "Invalid email address"
-                                "ERROR_EMAIL_ALREADY_IN_USE" -> "An account already exists with this email"
-                                "ERROR_WEAK_PASSWORD" -> "Password is too weak"
-                                "ERROR_NETWORK_REQUEST_FAILED" -> "Network error. Please check your connection"
-                                else -> "Registration failed: ${exception.message}"
-                            }
-                        }
+                    val errorMessage = when {
+                        exception.message?.contains("already exists", ignoreCase = true) == true -> 
+                            "An account already exists with this email"
+                        exception.message?.contains("Network error", ignoreCase = true) == true -> 
+                            "Network error. Please check your connection"
+                        exception.message?.contains("Cannot connect", ignoreCase = true) == true -> 
+                            "Cannot connect to server. Please check if server is running"
+                        exception.message?.contains("timeout", ignoreCase = true) == true -> 
+                            "Connection timeout. Please try again"
+                        exception.message?.contains("Email and password are required", ignoreCase = true) == true -> 
+                            "Email and password are required"
                         else -> exception.message ?: "Registration failed"
                     }
 

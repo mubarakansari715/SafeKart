@@ -87,4 +87,11 @@ dependencies {
     // Lottie
     implementation(libs.lottie.compose)
 
+    // Retrofit for API calls
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.gson)
+
 }

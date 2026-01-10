@@ -3,7 +3,6 @@ package com.safekart.safekart.ui.presentation.auth.login
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuthException
 import com.safekart.safekart.domain.usecase.auth.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,19 +104,18 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 .onFailure { exception ->
-                    val errorMessage = when (exception) {
-                        is FirebaseAuthException -> {
-                            when (exception.errorCode) {
-                                "ERROR_INVALID_EMAIL" -> "Invalid email address"
-                                "ERROR_WRONG_PASSWORD" -> "Wrong password"
-                                "ERROR_USER_NOT_FOUND" -> "No account found with this email"
-                                "ERROR_USER_DISABLED" -> "This account has been disabled"
-                                "ERROR_TOO_MANY_REQUESTS" -> "Too many requests. Please try again later"
-                                "ERROR_NETWORK_REQUEST_FAILED" -> "Network error. Please check your connection"
-                                else -> "Login failed: ${exception.message}"
-                            }
-                        }
-                        else -> "Login failed: ${exception.message}"
+                    val errorMessage = when {
+                        exception.message?.contains("Invalid email or password", ignoreCase = true) == true -> 
+                            "Invalid email or password"
+                        exception.message?.contains("Network error", ignoreCase = true) == true -> 
+                            "Network error. Please check your connection"
+                        exception.message?.contains("Cannot connect", ignoreCase = true) == true -> 
+                            "Cannot connect to server. Please check if server is running"
+                        exception.message?.contains("timeout", ignoreCase = true) == true -> 
+                            "Connection timeout. Please try again"
+                        exception.message?.contains("User with this email already exists", ignoreCase = true) == true -> 
+                            "An account already exists with this email"
+                        else -> exception.message ?: "Login failed"
                     }
 
                     _uiState.value = _uiState.value.copy(

@@ -1,5 +1,7 @@
 package com.safekart.safekart.di
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.safekart.safekart.data.repository.AuthRepositoryImpl
@@ -10,6 +12,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -35,8 +38,17 @@ abstract class DataModule {
 
 @Module
 @InstallIn(SingletonComponent::class)
-object FirebaseModule {
+object AppModule {
     
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(
+        @ApplicationContext context: Context
+    ): SharedPreferences {
+        return context.getSharedPreferences("safekart_prefs", Context.MODE_PRIVATE)
+    }
+    
+    // Keep Firebase providers if still needed for other features
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth {

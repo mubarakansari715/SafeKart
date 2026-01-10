@@ -1,6 +1,6 @@
 package com.safekart.safekart.domain.usecase.auth
 
-import com.google.firebase.auth.FirebaseUser
+import com.safekart.safekart.data.model.User
 import com.safekart.safekart.domain.repository.AuthRepository
 import javax.inject.Inject
 
@@ -11,7 +11,7 @@ import javax.inject.Inject
 class LoginUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(email: String, password: String): Result<FirebaseUser> {
+    suspend operator fun invoke(email: String, password: String): Result<User> {
         return authRepository.signInWithEmailAndPassword(email, password)
     }
 }

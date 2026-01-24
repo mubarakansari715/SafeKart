@@ -14,7 +14,7 @@ class RegisterUseCase @Inject constructor(
     suspend operator fun invoke(
         email: String,
         password: String,
-        username: String,
+        username: String? = null,  // Optional - backend will use email prefix if not provided
         phone: String? = null
     ): Result<User> {
         // Register user with backend API
@@ -22,7 +22,7 @@ class RegisterUseCase @Inject constructor(
         return authRepository.createUserWithEmailAndPassword(
             email = email,
             password = password,
-            fullName = username,
+            fullName = username?.takeIf { it.isNotBlank() },  // Only pass if not empty
             phone = phone
         )
     }

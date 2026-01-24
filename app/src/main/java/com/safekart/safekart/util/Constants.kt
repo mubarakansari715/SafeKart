@@ -9,14 +9,17 @@ object Constants {
     // For Physical Device: use your computer's IP address
     // To find your IP: Run "ifconfig" on Mac/Linux or "ipconfig" on Windows
     
-    // Option 1: Android Studio Emulator (standard)
-    // const val API_BASE_URL = "http://10.0.2.2:3000/api/"
+    // API Base URL - Update based on your setup:
+    // Option 1: Android Studio Emulator (standard) - use 10.0.2.2 for localhost
+    // Option 2: Genymotion Emulator - use your Mac's IP address
+    // Option 3: Physical Device - use your computer's IP address
+    // To find your IP: Run "ifconfig" on Mac/Linux or "ipconfig" on Windows
     
-    // Option 2: Genymotion Emulator (use your Mac's IP)
-    const val API_BASE_URL = "http://172.21.103.29:3000/api/"
+    // Default: Android Studio Emulator
+    const val API_BASE_URL = "http://10.0.2.2:3000/api/v1/"
     
-    // Option 3: Physical Device (replace with your actual IP if different)
-    // const val API_BASE_URL = "http://172.21.103.29:3000/api/"
+    // Alternative: For Genymotion or Physical Device (uncomment and update IP)
+    // const val API_BASE_URL = "http://YOUR_IP_ADDRESS:3000/api/v1/"
     
     const val API_TIMEOUT_SECONDS = 30L
 }

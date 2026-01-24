@@ -14,8 +14,9 @@ interface AuthRepository {
     suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-        fullName: String? = null,
-        phone: String? = null
+        fullName: String? = null,  // Optional - backend will use email prefix if not provided
+        phone: String? = null,
+        role: String = "customer"  // Optional: "customer" or "vendor"
     ): Result<User>
     
     fun signOut()

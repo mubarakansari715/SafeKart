@@ -26,9 +26,10 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         fullName: String?,
-        phone: String?
+        phone: String?,
+        role: String
     ): Result<User> {
-        return authRemoteDataSource.createUserWithEmailAndPassword(email, password, fullName, phone)
+        return authRemoteDataSource.createUserWithEmailAndPassword(email, password, fullName, phone, role)
     }
 
     override fun signOut() {

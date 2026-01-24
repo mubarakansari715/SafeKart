@@ -35,7 +35,7 @@ class AuthRemoteDataSource @Inject constructor(
                 User(
                     id = userId,
                     email = email,
-                    full_name = sharedPreferences.getString("user_full_name", null),
+                    full_name = null,  // Not stored in SharedPreferences
                     phone = sharedPreferences.getString("user_phone", null),
                     role = sharedPreferences.getString("user_role", "customer") ?: "customer"
                 )
@@ -57,7 +57,7 @@ class AuthRemoteDataSource @Inject constructor(
             val request = LoginRequest(email = email, password = password)
             val response = authApiService.login(request)
             
-            if (response.status == "success" && response.data != null) {
+            if (response.success && response.data != null) {
                 val authData = response.data
                 // Save token and user info
                 saveAuthData(authData)
@@ -103,19 +103,21 @@ class AuthRemoteDataSource @Inject constructor(
     suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-        fullName: String? = null,
-        phone: String? = null
+        fullName: String? = null,  // Optional - backend will use email prefix if not provided
+        phone: String? = null,
+        role: String = "customer"
     ): Result<User> {
         return try {
             val request = RegisterRequest(
                 email = email,
                 password = password,
-                full_name = fullName,
-                phone = phone
+                fullName = fullName,  // Optional field
+                phone = phone,
+                role = role
             )
             val response = authApiService.register(request)
             
-            if (response.status == "success" && response.data != null) {
+            if (response.success && response.data != null) {
                 val authData = response.data
                 // Save token and user info
                 saveAuthData(authData)
@@ -163,7 +165,7 @@ class AuthRemoteDataSource @Inject constructor(
             val response = authApiService.forgotPassword(request)
             
             // Backend returns success message at root level
-            if (response.status == "success") {
+            if (response.success) {
                 Result.success(Unit)
             } else {
                 Result.failure(
@@ -201,12 +203,55 @@ class AuthRemoteDataSource @Inject constructor(
         }
     }
     
+    suspend fun getCurrentUser(): Result<User> {
+        val token = getToken() ?: return Result.failure(Exception("No authentication token found"))
+        
+        return try {
+            val response = authApiService.getCurrentUser("Bearer $token")
+            
+            if (response.success && response.data != null) {
+                val user = response.data
+                // Update stored user info
+                sharedPreferences.edit()
+                    .putString(KEY_USER_ID, user.id)
+                    .putString(KEY_USER_EMAIL, user.email)
+                    // full_name not stored in SharedPreferences
+                    .putString("user_phone", user.phone)
+                    .putString("user_role", user.role)
+                    .apply()
+                Result.success(user)
+            } else {
+                Result.failure(
+                    Exception(response.message ?: response.error ?: "Failed to get user info")
+                )
+            }
+        } catch (e: HttpException) {
+            val errorMessage = when (e.code()) {
+                401 -> "Session expired. Please login again"
+                404 -> "User not found"
+                else -> "Failed to get user info: ${e.message()}"
+            }
+            Result.failure(Exception(errorMessage))
+        } catch (e: Exception) {
+            Result.failure(
+                Exception(
+                    when {
+                        e.message?.contains("Unable to resolve host") == true -> "Network error. Please check your connection"
+                        e.message?.contains("Failed to connect") == true -> "Cannot connect to server"
+                        else -> e.message ?: "Failed to get user info"
+                    }
+                )
+            )
+        }
+    }
+    
     fun signOut() {
         sharedPreferences.edit()
             .remove(KEY_TOKEN)
+            .remove("refresh_token")
             .remove(KEY_USER_ID)
             .remove(KEY_USER_EMAIL)
-            .remove("user_full_name")
+            // user_full_name not stored, so no need to remove
             .remove("user_phone")
             .remove("user_role")
             .apply()
@@ -214,10 +259,11 @@ class AuthRemoteDataSource @Inject constructor(
     
     private fun saveAuthData(authData: AuthData) {
         sharedPreferences.edit()
-            .putString(KEY_TOKEN, authData.token)
+            .putString(KEY_TOKEN, authData.tokens.accessToken)  // Save access token
+            .putString("refresh_token", authData.tokens.refreshToken)  // Save refresh token
             .putString(KEY_USER_ID, authData.user.id)
             .putString(KEY_USER_EMAIL, authData.user.email)
-            .putString("user_full_name", authData.user.full_name)
+            // full_name not stored in SharedPreferences
             .putString("user_phone", authData.user.phone)
             .putString("user_role", authData.user.role)
             .apply()

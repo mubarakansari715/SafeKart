@@ -1,5 +1,6 @@
 package com.safekart.safekart.data.remote.api
 
+import com.google.gson.annotations.SerializedName
 import com.safekart.safekart.data.model.ApiResponse
 import com.safekart.safekart.data.model.AuthData
 import com.safekart.safekart.data.model.User
@@ -43,7 +44,7 @@ interface AuthApiService {
      */
     @GET("auth/me")
     suspend fun getCurrentUser(
-        @Header("Authorization") token: String
+        @Header("Authorization") authorization: String  // Format: "Bearer <token>"
     ): ApiResponse<User>
 }
 
@@ -53,8 +54,10 @@ interface AuthApiService {
 data class RegisterRequest(
     val email: String,
     val password: String,
-    val full_name: String? = null,
-    val phone: String? = null
+    @SerializedName("fullName")
+    val fullName: String? = null,  // Optional - backend will use email prefix if not provided
+    val phone: String? = null,
+    val role: String? = "customer"  // Optional: "customer" or "vendor"
 )
 
 data class LoginRequest(

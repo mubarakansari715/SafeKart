@@ -95,11 +95,8 @@ class RegisterViewModel @Inject constructor(
         var passwordError: String? = null
         var confirmPasswordError: String? = null
 
-        // Username validation
-        if (name.isEmpty()) {
-            nameError = "Username is required"
-            isValid = false
-        } else if (name.length < 3) {
+        // Username validation (optional - only validate if provided)
+        if (name.isNotEmpty() && name.length < 3) {
             nameError = "Username must be at least 3 characters"
             isValid = false
         }
@@ -154,7 +151,7 @@ class RegisterViewModel @Inject constructor(
 
             val email = _uiState.value.email.trim()
             val password = _uiState.value.password
-            val name = _uiState.value.name.trim()
+            val name = _uiState.value.name.trim().takeIf { it.isNotBlank() }  // Optional - only pass if not empty
 
             registerUseCase(email, password, name, null)
                 .onSuccess {

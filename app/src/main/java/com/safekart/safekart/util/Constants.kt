@@ -17,7 +17,7 @@ object Constants {
     
     // Default: Android Studio Emulator
     const val API_BASE_URL = "http://10.0.2.2:3000/api/v1/"
-    
+//    const val API_BASE_URL = "https://gknjagvusdszfkutzreq.supabase.co/api/v1/"
     // Alternative: For Genymotion or Physical Device (uncomment and update IP)
     // const val API_BASE_URL = "http://YOUR_IP_ADDRESS:3000/api/v1/"
     

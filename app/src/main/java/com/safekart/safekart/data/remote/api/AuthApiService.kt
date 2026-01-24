@@ -33,6 +33,7 @@ interface AuthApiService {
     /**
      * Send password reset email
      * Note: Response doesn't include data field, only status and message
+     * After sending email, user clicks link in email to reset password on website
      */
     @POST("auth/forgot-password")
     suspend fun forgotPassword(

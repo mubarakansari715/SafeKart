@@ -78,14 +78,12 @@ class ForgotPasswordViewModel @Inject constructor(
                 }
                 .onFailure { exception ->
                     val errorMessage = when {
-                        exception.message?.contains("Network error", ignoreCase = true) == true -> 
+                        exception.message?.contains("Network error", ignoreCase = true) == true ->
                             "Network error. Please check your connection"
-                        exception.message?.contains("Cannot connect", ignoreCase = true) == true -> 
+                        exception.message?.contains("Cannot connect", ignoreCase = true) == true ->
                             "Cannot connect to server. Please check if server is running"
-                        exception.message?.contains("timeout", ignoreCase = true) == true -> 
+                        exception.message?.contains("timeout", ignoreCase = true) == true ->
                             "Connection timeout. Please try again"
-                        exception.message?.contains("Email is required", ignoreCase = true) == true -> 
-                            "Email is required"
                         else -> exception.message ?: "Failed to send reset email"
                     }
 

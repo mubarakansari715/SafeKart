@@ -7,6 +7,7 @@ import com.safekart.safekart.data.remote.api.AuthApiService
 import com.safekart.safekart.data.remote.api.ForgotPasswordRequest
 import com.safekart.safekart.data.remote.api.LoginRequest
 import com.safekart.safekart.data.remote.api.RegisterRequest
+import org.json.JSONObject
 import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -173,34 +174,58 @@ class AuthRemoteDataSource @Inject constructor(
                 )
             }
         } catch (e: HttpException) {
-            // Handle HTTP errors (4xx, 5xx)
-            val errorMessage = try {
-                val errorBody = e.response()?.errorBody()?.string()
-                errorBody ?: when (e.code()) {
-                    400 -> "Invalid email address"
-                    500 -> "Server error. Please try again later"
-                    else -> "Failed to send reset email: ${e.message()}"
-                }
-            } catch (ex: Exception) {
-                when (e.code()) {
-                    400 -> "Invalid email address"
-                    500 -> "Server error. Please try again later"
-                    else -> "Failed to send reset email: ${e.message()}"
-                }
-            }
+            val errorMessage = parseForgotPasswordError(e)
             Result.failure(Exception(errorMessage))
         } catch (e: Exception) {
             Result.failure(
                 Exception(
                     when {
-                        e.message?.contains("Unable to resolve host") == true -> "Network error. Please check your connection"
-                        e.message?.contains("Failed to connect") == true -> "Cannot connect to server. Please check if server is running"
-                        e.message?.contains("timeout") == true -> "Connection timeout. Please try again"
+                        e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                            "Network error. Please check your connection"
+                        e.message?.contains("Failed to connect", ignoreCase = true) == true ->
+                            "Cannot connect to server. Please check if server is running"
+                        e.message?.contains("timeout", ignoreCase = true) == true ->
+                            "Connection timeout. Please try again"
                         else -> e.message ?: "Failed to send reset email"
                     }
                 )
             )
         }
+    }
+
+    /**
+     * Parse API error body for forgot-password (422 validation, 400, 500) into a user-friendly message.
+     */
+    private fun parseForgotPasswordError(e: HttpException): String {
+        return try {
+            val errorBody = e.response()?.errorBody()?.string() ?: return fallbackMessage(e.code())
+            val parsed = parseApiErrorBody(errorBody)
+            if (parsed != null) parsed else fallbackMessage(e.code())
+        } catch (ex: Exception) {
+            fallbackMessage(e.code())
+        }
+    }
+
+    private fun parseApiErrorBody(json: String): String? {
+        return try {
+            val obj = JSONObject(json)
+            val msg = obj.optString("message", "").trim().takeIf { it.isNotEmpty() }
+                ?: obj.optString("error", "").trim().takeIf { it.isNotEmpty() }
+            if (msg != null) return msg
+            val errs = obj.optJSONArray("errors")
+            if (errs != null && errs.length() > 0) {
+                errs.optString(0, "").takeIf { it.isNotEmpty() }
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun fallbackMessage(code: Int): String = when (code) {
+        400 -> "Invalid email address"
+        422 -> "Please check your email and try again"
+        500 -> "Server error. Please try again later"
+        else -> "Failed to send reset email"
     }
     
     suspend fun getCurrentUser(): Result<User> {

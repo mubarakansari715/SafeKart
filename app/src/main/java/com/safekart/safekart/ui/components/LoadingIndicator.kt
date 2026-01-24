@@ -11,12 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.safekart.safekart.ui.theme.Background
 import com.safekart.safekart.ui.theme.SafeKartTheme
 
 /**
  * Common full-screen loading indicator component
- * Shows a centered circular progress indicator on the wavy background
+ * Shows a centered circular progress indicator on a clean background
  */
 @Composable
 fun LoadingIndicator(
@@ -26,23 +25,13 @@ fun LoadingIndicator(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Background)
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
     ) {
-        // Wavy background pattern
-        WavyBackground(
-            modifier = Modifier.fillMaxSize()
+        CircularProgressIndicator(
+            modifier = Modifier.size(progressIndicatorSize.dp),
+            color = MaterialTheme.colorScheme.primary
         )
-        
-        // Centered progress indicator
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(progressIndicatorSize.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
     }
 }
 

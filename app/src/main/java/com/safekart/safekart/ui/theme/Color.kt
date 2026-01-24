@@ -8,7 +8,7 @@ val PrimaryVariant = Color(0xFFFF8FA3) // Lighter Coral-Pink
 val Secondary = Color(0xFFFFB3C6) // Light Pink
 val SecondaryVariant = Color(0xFFFF9BB5) // Medium Pink
 
-val Background = Color(0xFFFFF5F7) // Very Light Pink
+val Background = Color(0xFFF5F5F5) // Light Gray
 val Surface = Color(0xFFFFFFFF) // White
 val SurfaceVariant = Color(0xFFFAFAFA) // Light Gray
 

@@ -31,7 +31,10 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            // Only log in debug builds for security and performance
+            // In production, disable logging to avoid exposing sensitive data
+            // Note: Set to NONE for production, BODY for debugging
+            level = HttpLoggingInterceptor.Level.BODY // Change to NONE for production
         }
         
         return OkHttpClient.Builder()

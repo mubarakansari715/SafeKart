@@ -1,3 +1,46 @@
 <resources>
     <string name="app_name">SafeKart</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_profile">Profile</string>
+    
+    <!-- Common Actions -->
+    <string name="action_logout">Logout</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+    
+    <!-- Profile Screen -->
+    <string name="profile_edit_profile">Edit Profile</string>
+    <string name="profile_my_orders">My Orders</string>
+    <string name="profile_my_wishlist">My Wishlist</string>
+    <string name="profile_manage_addresses">Manage Addresses</string>
+    <string name="profile_payment_methods">Saved Payment Methods</string>
+    <string name="profile_my_reviews">My Reviews</string>
+    <string name="profile_notifications">Notification Settings</string>
+    <string name="profile_language">Language</string>
+    <string name="profile_theme">Theme</string>
+    <string name="profile_help">Help &amp; Support</string>
+    <string name="profile_about">About</string>
+    <string name="profile_terms">Terms &amp; Conditions</string>
+    <string name="profile_privacy">Privacy Policy</string>
+    
+    <!-- Search Screen -->
+    <string name="search_placeholder">Search products…</string>
+    <string name="search_start_searching">Start searching for products</string>
+    <string name="search_results_for">Search results for: %1$s</string>
+    
+    <!-- Cart Screen -->
+    <string name="cart_title">Shopping Cart</string>
+    <string name="cart_coming_soon">Cart screen coming soon</string>
+    
+    <!-- Common Messages -->
+    <string name="error_network">Network error. Please check your connection</string>
+    <string name="error_server">Server error. Please try again later</string>
+    <string name="error_unknown">An error occurred. Please try again</string>
+    <string name="loading">Loading…</string>
 </resources>

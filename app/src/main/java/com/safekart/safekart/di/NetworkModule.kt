@@ -3,6 +3,7 @@ package com.safekart.safekart.di
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.safekart.safekart.data.remote.api.AuthApiService
+import com.safekart.safekart.data.remote.api.HomeApiService
 import com.safekart.safekart.util.Constants
 import dagger.Module
 import dagger.Provides
@@ -62,5 +63,11 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeApiService(retrofit: Retrofit): HomeApiService {
+        return retrofit.create(HomeApiService::class.java)
     }
 }

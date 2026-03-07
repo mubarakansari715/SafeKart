@@ -5,8 +5,10 @@ import android.content.SharedPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.safekart.safekart.data.repository.AuthRepositoryImpl
+import com.safekart.safekart.data.repository.HomeRepositoryImpl
 import com.safekart.safekart.data.repository.UserRepositoryImpl
 import com.safekart.safekart.domain.repository.AuthRepository
+import com.safekart.safekart.domain.repository.HomeRepository
 import com.safekart.safekart.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -34,6 +36,12 @@ abstract class DataModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeRepository(
+        homeRepositoryImpl: HomeRepositoryImpl
+    ): HomeRepository
 }
 
 @Module

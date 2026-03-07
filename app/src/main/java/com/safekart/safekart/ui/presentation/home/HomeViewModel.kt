@@ -3,6 +3,7 @@ package com.safekart.safekart.ui.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.safekart.safekart.domain.repository.AuthRepository
+import com.safekart.safekart.domain.repository.HomeRepository
 import com.safekart.safekart.domain.usecase.user.GetUserInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +15,41 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val getUserInfoUseCase: GetUserInfoUseCase
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val homeRepository: HomeRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        loadHome()
+        loadUserData()
+    }
+
+    fun loadHome() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            homeRepository.getHome()
+                .onSuccess { homeData ->
+                    _uiState.value = _uiState.value.copy(
+                        banners = homeData.banners,
+                        categories = homeData.categories,
+                        bestSelling = homeData.bestSelling,
+                        offerBanner = homeData.offerBanner,
+                        productSections = homeData.product,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load home"
+                    )
+                }
+        }
+    }
 
     fun loadUserData() {
         viewModelScope.launch {
@@ -30,36 +61,33 @@ class HomeViewModel @Inject constructor(
                         } else {
                             "Welcome!"
                         }
-
                         _uiState.value = _uiState.value.copy(
                             welcomeMessage = welcomeMessage,
-                            userEmail = userInfo.email ?: "",
-                            isLoading = false
+                            userEmail = userInfo.email ?: ""
                         )
                     }
                     .onFailure {
-                        // Fallback to email if use case fails
                         val userEmail = authRepository.currentUser?.email ?: ""
                         _uiState.value = _uiState.value.copy(
                             welcomeMessage = "Welcome!",
-                            userEmail = userEmail,
-                            isLoading = false
+                            userEmail = userEmail
                         )
                     }
             } catch (e: Exception) {
-                // Fallback to email if exception occurs
                 val userEmail = authRepository.currentUser?.email ?: ""
                 _uiState.value = _uiState.value.copy(
                     welcomeMessage = "Welcome!",
-                    userEmail = userEmail,
-                    isLoading = false
+                    userEmail = userEmail
                 )
             }
         }
+    }
+
+    fun retry() {
+        loadHome()
     }
 
     fun logout() {
         authRepository.signOut()
     }
 }
-

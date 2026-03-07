@@ -9,20 +9,20 @@ plugins {
 
 android {
     namespace = "com.safekart.safekart"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36  // Android 16
 
     defaultConfig {
         applicationId = "com.safekart.safekart"
-        minSdk = 31
-        targetSdk = 36
+        minSdk = 30   // Android 11
+        targetSdk = 36  // Android 16
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Override: in SafeKart/gradle.properties add API_BASE_URL=http://YOUR_IP:3000/api/v1/
+        val apiBaseUrl = rootProject.findProperty("API_BASE_URL") as String? ?: "http://10.0.2.2:3000/api/v1/"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
@@ -43,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -94,4 +95,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
 
+    // Coil for image loading (includes SVG so placehold.co and other SVG URLs work)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-svg:2.5.0")
 }

@@ -1,5 +1,6 @@
 package com.safekart.safekart.ui.presentation.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,12 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +38,7 @@ import com.safekart.safekart.data.model.Banner
 import com.safekart.safekart.data.model.HomeCategory
 import com.safekart.safekart.data.model.HomeProduct
 import com.safekart.safekart.data.model.OfferBanner
+import com.safekart.safekart.ui.theme.CategoryCircleBg
 import com.safekart.safekart.ui.theme.SafeKartTheme
 import coil.compose.AsyncImage
 
@@ -97,15 +100,88 @@ fun BannersSection(
 @Composable
 fun CategoriesSection(
     categories: List<HomeCategory>,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
+    onViewAll: (() -> Unit)? = null
 ) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(categories) { cat ->
-            AssistChip(
-                onClick = { onClick(cat.slug) },
-                label = { Text(cat.name) }
-            )
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SectionHeader(
+            title = "Shop By Categories",
+            onViewAll = onViewAll
+        )
+        categories.chunked(4).forEach { rowCategories ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                rowCategories.forEach { cat ->
+                    CategoryGridItem(
+                        category = cat,
+                        onClick = { onClick(cat.slug) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                repeat(4 - rowCategories.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun CategoryGridItem(
+    category: HomeCategory,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val imageUrl = category.imageUrl?.takeIf { it.isNotBlank() }
+
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(CategoryCircleBg),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = category.name,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = category.name.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Text(
+            text = category.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -231,16 +307,13 @@ fun ProductCard(
 
 // region — Loading, error, empty
 
+/**
+ * Full-screen loading for Home only.
+ * Uses HomeShimmerEffect (banner + Shop By Categories grid + product row).
+ */
 @Composable
 fun FullScreenLoading() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
+    HomeShimmerEffect()
 }
 
 @Composable

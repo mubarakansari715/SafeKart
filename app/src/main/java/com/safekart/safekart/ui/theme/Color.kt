@@ -9,6 +9,7 @@ val Secondary = Color(0xFFFFB3C6) // Light Pink
 val SecondaryVariant = Color(0xFFFF9BB5) // Medium Pink
 
 val Background = Color(0xFFF5F5F5) // Light Gray
+val CategoryCircleBg = Color(0xFFE8F4F8) // Light blue for category circles
 val Surface = Color(0xFFFFFFFF) // White
 val SurfaceVariant = Color(0xFFFAFAFA) // Light Gray
 

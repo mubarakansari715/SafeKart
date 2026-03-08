@@ -15,5 +15,6 @@ data class HomeUiState(
     val offerBanner: OfferBanner? = null,
     val productSections: List<ProductSection> = emptyList(),
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null
 )

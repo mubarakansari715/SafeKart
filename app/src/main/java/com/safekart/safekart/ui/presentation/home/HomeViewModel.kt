@@ -87,6 +87,30 @@ class HomeViewModel @Inject constructor(
         loadHome()
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true, error = null)
+            homeRepository.getHome()
+                .onSuccess { homeData ->
+                    _uiState.value = _uiState.value.copy(
+                        banners = homeData.banners,
+                        categories = homeData.categories,
+                        bestSelling = homeData.bestSelling,
+                        offerBanner = homeData.offerBanner,
+                        productSections = homeData.product,
+                        isRefreshing = false,
+                        error = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isRefreshing = false,
+                        error = e.message ?: "Failed to refresh"
+                    )
+                }
+        }
+    }
+
     fun logout() {
         authRepository.signOut()
     }

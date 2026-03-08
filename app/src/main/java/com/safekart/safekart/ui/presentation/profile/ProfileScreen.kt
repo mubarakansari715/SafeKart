@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.safekart.safekart.data.model.Address
 
 @Composable
 fun ProfileScreen(
@@ -58,6 +59,14 @@ fun ProfileScreen(
                     userEmail = uiState.userEmail,
                     userPhone = uiState.userPhone,
                     onEditProfile = onNavigateToEditProfile
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Shipping address list (same as checkout)
+                ShippingAddressSection(
+                    addresses = uiState.shippingAddresses,
+                    onManageAddresses = onNavigateToAddresses
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -201,6 +210,115 @@ fun ProfileHeader(
                 Text("Edit Profile")
             }
         }
+    }
+}
+
+@Composable
+fun ShippingAddressSection(
+    addresses: List<Address>,
+    onManageAddresses: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Shipping addresses",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                TextButton(onClick = onManageAddresses) {
+                    Text("Manage")
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            if (addresses.isEmpty()) {
+                Text(
+                    text = "No address added yet.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onManageAddresses,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add address")
+                }
+            } else {
+                addresses.forEach { address ->
+                    ShippingAddressItem(address = address)
+                    if (address != addresses.last()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Divider()
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShippingAddressItem(address: Address) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = address.fullName.ifEmpty { "Address" },
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (address.isDefault) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = "Default",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
+        if (address.phone.isNotEmpty()) {
+            Text(
+                text = address.phone,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "${address.street}, ${address.city}, ${address.state} - ${address.pincode}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

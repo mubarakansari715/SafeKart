@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,13 +48,19 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.safekart.safekart.ui.presentation.productdetail.CartEvent
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,10 +87,29 @@ import kotlinx.coroutines.launch
 fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = hiltViewModel(),
     onBack: () -> Unit,
-    onAddToCart: (String) -> Unit = {}
+    onNavigateToCart: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var isWishlisted by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.cartEvent.collect { event ->
+            when (event) {
+                is CartEvent.Added -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Added to cart!",
+                        actionLabel = "View Cart",
+                        duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        onNavigateToCart()
+                    }
+                }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -95,7 +122,14 @@ fun ProductDetailScreen(
 
             uiState.product != null -> ProductDetailContent(
                 product = uiState.product!!,
-                onAddToCart = { onAddToCart(uiState.product!!.id) }
+                cartQuantity = uiState.cartQuantity,
+                onAddToCart = { viewModel.addToCart() },
+                onIncreaseQuantity = { viewModel.increaseQuantity() },
+                onDecreaseQuantity = { viewModel.decreaseQuantity() },
+                onBuyNow = {
+                    if (uiState.cartQuantity <= 0) viewModel.addToCart()
+                    onNavigateToCart()
+                }
             )
         }
 
@@ -117,6 +151,15 @@ fun ProductDetailScreen(
                 .statusBarsPadding()
                 .padding(end = 12.dp, top = 8.dp)
         )
+
+        // Snackbar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 90.dp)
+        )
     }
 }
 
@@ -127,7 +170,11 @@ fun ProductDetailScreen(
 @Composable
 private fun ProductDetailContent(
     product: HomeProduct,
-    onAddToCart: () -> Unit
+    cartQuantity: Int = 0,
+    onAddToCart: () -> Unit,
+    onIncreaseQuantity: () -> Unit = {},
+    onDecreaseQuantity: () -> Unit = {},
+    onBuyNow: () -> Unit = {}
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -148,7 +195,12 @@ private fun ProductDetailContent(
         // Sticky bottom bar
         BottomActionBar(
             isInStock = product.stock > 0,
+            cartQuantity = cartQuantity,
+            maxQuantity = product.stock,
             onAddToCart = onAddToCart,
+            onIncreaseQuantity = onIncreaseQuantity,
+            onDecreaseQuantity = onDecreaseQuantity,
+            onBuyNow = onBuyNow,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
@@ -578,7 +630,12 @@ private fun FloatingWishlistButton(
 @Composable
 private fun BottomActionBar(
     isInStock: Boolean,
+    cartQuantity: Int = 0,
+    maxQuantity: Int = Int.MAX_VALUE,
     onAddToCart: () -> Unit,
+    onIncreaseQuantity: () -> Unit = {},
+    onDecreaseQuantity: () -> Unit = {},
+    onBuyNow: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -593,37 +650,82 @@ private fun BottomActionBar(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Add to Cart (outlined, with icon)
-            OutlinedButton(
-                onClick = onAddToCart,
-                enabled = isInStock,
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(
-                    1.5.dp,
-                    if (isInStock) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Add to Cart",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
-                )
+            // Left: Add to Cart OR quantity (+ / -) controls
+            if (cartQuantity == 0) {
+                OutlinedButton(
+                    onClick = onAddToCart,
+                    enabled = isInStock,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(
+                        1.5.dp,
+                        if (isInStock) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Add to Cart",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            } else {
+                // Quantity controls: minus, count, plus
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = onDecreaseQuantity,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Decrease quantity",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Text(
+                            text = cartQuantity.toString(),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        IconButton(
+                            onClick = onIncreaseQuantity,
+                            enabled = cartQuantity < maxQuantity,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Increase quantity",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
 
-            // Buy Now (filled)
+            // Buy Now (filled) – add to cart if needed and go to cart screen
             Button(
-                onClick = { /* TODO: Buy Now */ },
+                onClick = onBuyNow,
                 enabled = isInStock,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -711,7 +813,11 @@ private fun ProductDetailContentPreview() {
     SafeKartTheme {
         ProductDetailContent(
             product = previewProduct,
-            onAddToCart = {}
+            cartQuantity = 0,
+            onAddToCart = {},
+            onIncreaseQuantity = {},
+            onDecreaseQuantity = {},
+            onBuyNow = {}
         )
     }
 }

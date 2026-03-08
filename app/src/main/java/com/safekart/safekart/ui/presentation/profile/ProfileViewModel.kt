@@ -2,19 +2,22 @@ package com.safekart.safekart.ui.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.safekart.safekart.domain.repository.AddressRepository
 import com.safekart.safekart.domain.repository.AuthRepository
 import com.safekart.safekart.domain.usecase.user.GetUserInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val getUserInfoUseCase: GetUserInfoUseCase
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val addressRepository: AddressRepository
 ) : ViewModel() {
 
     // Initialize state directly from cache - no redundant operations
@@ -31,6 +34,18 @@ class ProfileViewModel @Inject constructor(
         }
     )
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            addressRepository.addresses.collect { list ->
+                _uiState.update { it.copy(shippingAddresses = list) }
+            }
+        }
+    }
+
+    fun refreshAddresses() {
+        addressRepository.refresh()
+    }
 
     /**
      * Refreshes user data from API

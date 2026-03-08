@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,7 +23,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.text.font.FontWeight
 import com.safekart.safekart.util.Constants
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.safekart.safekart.ui.presentation.cart.CartViewModel
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,6 +50,10 @@ import com.safekart.safekart.ui.presentation.profile.ProfileScreen
 import com.safekart.safekart.ui.presentation.search.SearchScreen
 import com.safekart.safekart.ui.presentation.splash.SplashScreen
 import com.safekart.safekart.ui.theme.SafeKartTheme
+import com.safekart.safekart.ui.presentation.address.AddressScreen
+import com.safekart.safekart.ui.presentation.orders.OrdersScreen
+import com.safekart.safekart.ui.presentation.ordersuccess.OrderSuccessScreen
+import com.safekart.safekart.ui.presentation.payment.PaymentScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -133,7 +143,56 @@ class MainActivity : ComponentActivity() {
                         ) {
                             ProductDetailScreen(
                                 onBack = { navController.popBackStack() },
-                                onAddToCart = { /* TODO: Add to cart */ }
+                                onNavigateToCart = { navController.navigate(NavRoutes.CART) }
+                            )
+                        }
+
+                        composable(NavRoutes.ADDRESS) {
+                            AddressScreen(
+                                onBack = { navController.popBackStack() },
+                                onAddressSelected = { addressId ->
+                                    navController.navigate(NavRoutes.payment(addressId))
+                                }
+                            )
+                        }
+
+                        composable(
+                            route = NavRoutes.PAYMENT,
+                            arguments = listOf(navArgument("addressId") { type = NavType.StringType })
+                        ) {
+                            PaymentScreen(
+                                onBack = { navController.popBackStack() },
+                                onOrderPlaced = { orderId ->
+                                    navController.navigate(NavRoutes.orderSuccess(orderId)) {
+                                        popUpTo(NavRoutes.CART) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable(
+                            route = NavRoutes.ORDER_SUCCESS,
+                            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+                            OrderSuccessScreen(
+                                orderId = orderId,
+                                onViewOrders = {
+                                    navController.navigate(NavRoutes.MY_ORDERS) {
+                                        popUpTo(NavRoutes.ORDER_SUCCESS) { inclusive = true }
+                                    }
+                                },
+                                onContinueShopping = {
+                                    navController.navigate(NavRoutes.HOME) {
+                                        popUpTo(NavRoutes.HOME) { inclusive = false }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable(NavRoutes.MY_ORDERS) {
+                            OrdersScreen(
+                                onBack = { navController.popBackStack() }
                             )
                         }
 
@@ -148,8 +207,9 @@ class MainActivity : ComponentActivity() {
 
                         composable(NavRoutes.CART) {
                             CartScreen(
-                                onBack = {
-                                    navController.popBackStack()
+                                onBack = { navController.popBackStack() },
+                                onProceedToCheckout = {
+                                    navController.navigate(NavRoutes.ADDRESS)
                                 }
                             )
                         }
@@ -175,7 +235,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     onNavigateToOrders = {
-                                        // TODO: Navigate to orders screen
+                                        navController.navigate(NavRoutes.MY_ORDERS)
                                     },
                                     onNavigateToWishlist = {
                                         // TODO: Navigate to wishlist screen
@@ -269,6 +329,10 @@ class MainActivity : ComponentActivity() {
     fun HomeTopAppBar(
         onNavigateToCart: () -> Unit
     ) {
+        val cartViewModel: CartViewModel = hiltViewModel()
+        val cartState by cartViewModel.uiState.collectAsState()
+        val itemCount = cartState.items.sumOf { it.quantity }
+
         TopAppBar(
             title = {
                 Text(
@@ -280,10 +344,26 @@ class MainActivity : ComponentActivity() {
             },
             actions = {
                 IconButton(onClick = onNavigateToCart) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Shopping Cart"
-                    )
+                    BadgedBox(
+                        badge = {
+                            if (itemCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ) {
+                                    Text(
+                                        text = if (itemCount > 99) "99+" else itemCount.toString(),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Shopping Cart"
+                        )
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

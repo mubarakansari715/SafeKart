@@ -3,7 +3,6 @@ package com.safekart.safekart.ui.presentation.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,28 +19,46 @@ import com.safekart.safekart.ui.components.ShimmerBox
 
 /**
  * Home-screen-only shimmer effect.
- * Matches the current home layout: banner, Shop By Categories grid (circular placeholders),
- * section header, and product row placeholders.
+ * Matches current home UI: full-width banner + indicator dots, Shop By Categories grid,
+ * Best selling section, offer strip, and product rows.
  */
 @Composable
 fun HomeShimmerEffect(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Banner shimmer
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .height(160.dp)
-                .clip(RoundedCornerShape(12.dp))
-        )
+        // 1. Banner block (matches BannersSection: full-width banner + indicator row)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+            // Indicator dots below banner (Flipkart-style)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(4) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+        }
 
-        // "Shop By Categories" section
+        // 2. "Shop By Categories" header (title + View all)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,7 +78,7 @@ fun HomeShimmerEffect(
             )
         }
 
-        // Category grid: 4 columns, circular placeholders + label (matches CategoryGridItem)
+        // 3. Category grid: 4 columns, circular placeholders + label (matches CategoryGridItem 72dp circle)
         repeat(3) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -91,7 +108,7 @@ fun HomeShimmerEffect(
             }
         }
 
-        // Section header (e.g. "Best selling")
+        // 4. Section header "Best selling"
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth(0.35f)
@@ -99,7 +116,7 @@ fun HomeShimmerEffect(
                 .clip(RoundedCornerShape(4.dp))
         )
 
-        // Product row shimmer
+        // 5. Product row (matches ProductCard: 140dp wide, 100dp image, 2-line title, price)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -122,6 +139,49 @@ fun HomeShimmerEffect(
                         modifier = Modifier
                             .width(60.dp)
                             .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+        }
+
+        // 6. Offer banner strip (matches OfferBannerSection 150dp height)
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .clip(RoundedCornerShape(12.dp))
+        )
+
+        // 7. Another section header + product row
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth(0.4f)
+                .height(20.dp)
+                .clip(RoundedCornerShape(4.dp))
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(3) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .height(100.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(12.dp)
                             .clip(RoundedCornerShape(4.dp))
                     )
                 }

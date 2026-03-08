@@ -66,7 +66,8 @@ dependencies {
 
 
     // Material Icons Extended (uses BOM version)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.foundation)
 
     // Hilt
     implementation(libs.hilt.android)
@@ -96,6 +97,6 @@ dependencies {
     implementation(libs.gson)
 
     // Coil for image loading (includes SVG so placehold.co and other SVG URLs work)
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("io.coil-kt:coil-svg:2.5.0")
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 }

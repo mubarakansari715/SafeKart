@@ -1,5 +1,6 @@
 package com.safekart.safekart.ui.presentation.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -24,7 +27,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -44,51 +50,113 @@ import coil.compose.AsyncImage
 
 // region — Banners
 
+private const val BANNER_AUTO_SCROLL_DELAY_MS = 4000L
+private const val BANNER_INFINITE_PAGE_MULTIPLIER = 100
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BannersSection(
     banners: List<Banner>,
     onClick: (String, String?) -> Unit
 ) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 0.dp)
+    if (banners.isEmpty()) return
+
+    // Infinite pager: 1 banner = 1 page; 2+ = many pages so swipe/auto-scroll feels infinite
+    val pageCount = remember(banners.size) {
+        if (banners.size <= 1) 1 else banners.size * BANNER_INFINITE_PAGE_MULTIPLIER
+    }
+    val pagerState = rememberPagerState(
+        initialPage = if (pageCount <= 1) 0 else pageCount / 2,
+        pageCount = { pageCount }
+    )
+
+    // Infinite auto-scroll (only when multiple banners)
+    LaunchedEffect(banners.size) {
+        if (banners.size <= 1) return@LaunchedEffect
+        while (true) {
+            delay(BANNER_AUTO_SCROLL_DELAY_MS)
+            val nextPage = (pagerState.currentPage + 1) % pageCount
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(banners) { banner ->
-            val imageUrl = banner.mobileImageUrl?.takeIf { it.isNotBlank() } ?: banner.imageUrl
-            val context = LocalContext.current
-            Surface(
-                modifier = Modifier
-                    .fillParentMaxWidth(0.9f)
-                    .height(160.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onClick(banner.linkType, banner.linkValue) },
-                shape = RoundedCornerShape(12.dp)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            beyondViewportPageCount = 1
+        ) { page ->
+            BannerItem(banner = banners[page % banners.size], onClick = onClick)
+        }
+
+        // Page indicator below (only when multiple banners)
+        if (banners.size > 1) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (imageUrl.isNotBlank()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = banner.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds
-                    )
-                } else {
+                repeat(banners.size) { index ->
+                    val isSelected = (pagerState.currentPage % banners.size) == index
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = banner.title.ifBlank { "Banner" },
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
+                            .padding(horizontal = 4.dp)
+                            .size(
+                                width = if (isSelected) 20.dp else 8.dp,
+                                height = 8.dp
+                            )
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                    )
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun BannerItem(
+    banner: Banner,
+    onClick: (String, String?) -> Unit
+) {
+    val imageUrl = banner.mobileImageUrl?.takeIf { it.isNotBlank() } ?: banner.imageUrl
+    val context = LocalContext.current
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick(banner.linkType, banner.linkValue) },
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        if (imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = banner.title,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillBounds
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = banner.title.ifBlank { "Banner" },
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }
@@ -96,6 +164,8 @@ fun BannersSection(
 // endregion
 
 // region — Categories
+
+private const val CATEGORY_MAX_VISIBLE_ITEMS = 8  // 2 rows × 4 columns
 
 @Composable
 fun CategoriesSection(
@@ -111,7 +181,7 @@ fun CategoriesSection(
             title = "Shop By Categories",
             onViewAll = onViewAll
         )
-        categories.chunked(4).forEach { rowCategories ->
+        categories.take(CATEGORY_MAX_VISIBLE_ITEMS).chunked(4).forEach { rowCategories ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

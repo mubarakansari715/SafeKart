@@ -78,8 +78,8 @@ fun HomeShimmerEffect(
             )
         }
 
-        // 3. Category grid: 4 columns, circular placeholders + label (matches CategoryGridItem 72dp circle)
-        repeat(3) {
+        // 3. Category grid: 4 columns, 2 rows (matches home categories limit)
+        repeat(2) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

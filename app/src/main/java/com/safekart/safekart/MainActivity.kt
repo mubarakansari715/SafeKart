@@ -35,6 +35,7 @@ import javax.inject.Inject
 import com.safekart.safekart.ui.presentation.auth.login.LoginScreen
 import com.safekart.safekart.ui.presentation.auth.register.RegisterScreen
 import com.safekart.safekart.ui.presentation.cart.CartScreen
+import com.safekart.safekart.ui.presentation.category.CategoryScreen
 import com.safekart.safekart.ui.presentation.home.HomeScreen
 import com.safekart.safekart.ui.presentation.profile.ProfileScreen
 import com.safekart.safekart.ui.presentation.search.SearchScreen
@@ -107,7 +108,25 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 currentRoute = NavRoutes.HOME
                             ) {
-                                HomeScreen()
+                                HomeScreen(
+                                    onViewAllCategory = { _, type ->
+                                        if (type == "categories") {
+                                            navController.navigate(NavRoutes.CATEGORIES) {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        composable(NavRoutes.CATEGORIES) {
+                            MainScreenWithBottomNav(
+                                navController = navController,
+                                currentRoute = NavRoutes.CATEGORIES
+                            ) {
+                                CategoryScreen()
                             }
                         }
 
@@ -201,18 +220,20 @@ class MainActivity : ComponentActivity() {
     ) {
         Scaffold(
             topBar = {
-                // Show TopAppBar only on Home screen
-                if (currentRoute == NavRoutes.HOME) {
-                    HomeTopAppBar(
+                when (currentRoute) {
+                    NavRoutes.HOME -> HomeTopAppBar(
                         onNavigateToCart = {
                             navController.navigate(NavRoutes.CART)
                         }
                     )
+                    NavRoutes.CATEGORIES -> AppBarWithTitle(title = "Categories")
+                    NavRoutes.SEARCH -> AppBarWithTitle(title = "Search")
+                    NavRoutes.PROFILE -> AppBarWithTitle(title = "Profile")
                 }
             },
             bottomBar = {
                 // Only show bottom navigation on main app screens
-                if (currentRoute in listOf(NavRoutes.HOME, NavRoutes.SEARCH, NavRoutes.PROFILE)) {
+                if (currentRoute in listOf(NavRoutes.HOME, NavRoutes.CATEGORIES, NavRoutes.SEARCH, NavRoutes.PROFILE)) {
                     BottomNavigationBar(navController = navController)
                 }
             }
@@ -253,6 +274,25 @@ class MainActivity : ComponentActivity() {
                 containerColor = MaterialTheme.colorScheme.primary,
                 titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun AppBarWithTitle(title: String) {
+        TopAppBar(
+            title = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary
             )
         )
     }

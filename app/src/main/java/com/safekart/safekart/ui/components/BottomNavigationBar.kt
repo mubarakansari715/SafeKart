@@ -53,6 +53,32 @@ fun BottomNavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
+                    imageVector = if (currentRoute == NavRoutes.CATEGORIES) {
+                        Icons.Filled.Category
+                    } else {
+                        Icons.Default.Category
+                    },
+                    contentDescription = "Categories"
+                )
+            },
+            label = { Text("Categories") },
+            selected = currentRoute == NavRoutes.CATEGORIES,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.primary
+            ),
+            onClick = {
+                navController.navigate(NavRoutes.CATEGORIES) {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
                     imageVector = if (currentRoute == NavRoutes.SEARCH) {
                         Icons.Filled.Search
                     } else {

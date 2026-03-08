@@ -284,6 +284,7 @@ fun ProductCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = product.title,
+                minLines = 2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall

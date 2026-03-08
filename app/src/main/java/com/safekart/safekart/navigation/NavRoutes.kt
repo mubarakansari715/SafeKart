@@ -10,6 +10,9 @@ object NavRoutes {
     const val SEARCH = "search"
     const val PROFILE = "profile"
     const val CART = "cart"
+    const val PRODUCT_DETAIL = "product_detail/{productId}"
+
+    fun productDetail(productId: String) = "product_detail/$productId"
 }
 
 

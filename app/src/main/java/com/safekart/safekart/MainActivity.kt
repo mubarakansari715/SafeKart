@@ -23,9 +23,11 @@ import com.safekart.safekart.util.Constants
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.safekart.safekart.navigation.NavRoutes
 import com.safekart.safekart.ui.components.BottomNavigationBar
 import com.safekart.safekart.ui.components.NetworkStatusIndicator
@@ -37,6 +39,7 @@ import com.safekart.safekart.ui.presentation.auth.register.RegisterScreen
 import com.safekart.safekart.ui.presentation.cart.CartScreen
 import com.safekart.safekart.ui.presentation.category.CategoryScreen
 import com.safekart.safekart.ui.presentation.home.HomeScreen
+import com.safekart.safekart.ui.presentation.productdetail.ProductDetailScreen
 import com.safekart.safekart.ui.presentation.profile.ProfileScreen
 import com.safekart.safekart.ui.presentation.search.SearchScreen
 import com.safekart.safekart.ui.presentation.splash.SplashScreen
@@ -109,6 +112,9 @@ class MainActivity : ComponentActivity() {
                                 currentRoute = NavRoutes.HOME
                             ) {
                                 HomeScreen(
+                                    onProductClick = { productId ->
+                                        navController.navigate(NavRoutes.productDetail(productId))
+                                    },
                                     onViewAllCategory = { _, type ->
                                         if (type == "categories") {
                                             navController.navigate(NavRoutes.CATEGORIES) {
@@ -119,6 +125,16 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+                        }
+
+                        composable(
+                            route = NavRoutes.PRODUCT_DETAIL,
+                            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+                        ) {
+                            ProductDetailScreen(
+                                onBack = { navController.popBackStack() },
+                                onAddToCart = { /* TODO: Add to cart */ }
+                            )
                         }
 
                         composable(NavRoutes.CATEGORIES) {

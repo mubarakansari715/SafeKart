@@ -106,13 +106,13 @@ fun OrderSuccessScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Order ID pill
+            // Order number pill
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(
-                    text = "Order ID: ${orderId.take(8).uppercase()}",
+                    text = "Order #$orderId",
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 1.sp

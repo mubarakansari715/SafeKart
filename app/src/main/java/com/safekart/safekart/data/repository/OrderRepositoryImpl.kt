@@ -1,10 +1,9 @@
 package com.safekart.safekart.data.repository
 
-import com.safekart.safekart.data.model.Address
-import com.safekart.safekart.data.model.CartItem
 import com.safekart.safekart.data.model.CartItemSnapshot
 import com.safekart.safekart.data.model.Order
 import com.safekart.safekart.data.model.OrderDto
+import com.safekart.safekart.data.model.OrderListItem
 import com.safekart.safekart.data.model.PlaceOrderRequest
 import com.safekart.safekart.data.model.ProductSnapshot
 import com.safekart.safekart.data.remote.customer.OrderRemoteDataSource
@@ -20,8 +19,8 @@ class OrderRepositoryImpl @Inject constructor(
     private val remote: OrderRemoteDataSource
 ) : OrderRepository {
 
-    private val _orders = MutableStateFlow<List<Order>>(emptyList())
-    override val orders: StateFlow<List<Order>> = _orders.asStateFlow()
+    private val _orders = MutableStateFlow<List<OrderListItem>>(emptyList())
+    override val orders: StateFlow<List<OrderListItem>> = _orders.asStateFlow()
 
     override fun placeOrder(order: Order): Order = order // UI calls placeOrderRemote instead
 
@@ -51,56 +50,14 @@ class OrderRepositoryImpl @Inject constructor(
             total = order.totalAmount
         )
         return remote.placeOrder(request).map { dto ->
-            val placed = order.copy(id = dto.id)
-            _orders.value = listOf(placed) + _orders.value
-            placed
+            loadOrders()
+            order.copy(id = dto.id, orderNumber = dto.orderNumber)
         }
     }
 
     override suspend fun loadOrders() {
-        remote.getOrders().onSuccess { dtos ->
-            _orders.value = dtos.map { it.toDomain() }
+        remote.getOrders().onSuccess { items ->
+            _orders.value = items
         }
-    }
-
-    private fun OrderDto.toDomain(): Order {
-        val addr = shippingAddress
-        val domainAddr = if (addr != null) Address(
-            id = addr.id,
-            fullName = addr.fullName,
-            phone = addr.phone,
-            street = addr.line1,
-            city = addr.city,
-            state = addr.state,
-            pincode = addr.postalCode,
-            isDefault = addr.isDefault
-        ) else Address(id = "", fullName = "")
-
-        val domainItems = items.map { snap ->
-            val s = snap.productSnapshot
-            CartItem(
-                product = com.safekart.safekart.data.model.HomeProduct(
-                    id = snap.productId,
-                    title = s?.title ?: "",
-                    brand = s?.brand ?: "",
-                    priceSale = s?.priceSale ?: 0.0,
-                    priceMrp = s?.priceMrp ?: 0.0,
-                    discountPercent = s?.discountPercent ?: 0,
-                    imageUrls = s?.imageUrls ?: emptyList(),
-                    stock = s?.stock ?: 0
-                ),
-                quantity = snap.quantity
-            )
-        }
-
-        return Order(
-            id = id,
-            items = domainItems,
-            address = domainAddr,
-            paymentMethod = paymentMethod,
-            status = status,
-            totalAmount = total,
-            createdAt = try { java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).parse(createdAt)?.time ?: System.currentTimeMillis() } catch (e: Exception) { System.currentTimeMillis() }
-        )
     }
 }

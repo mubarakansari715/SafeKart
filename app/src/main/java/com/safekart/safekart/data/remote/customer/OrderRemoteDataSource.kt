@@ -1,7 +1,9 @@
 package com.safekart.safekart.data.remote.customer
 
 import com.safekart.safekart.data.model.OrderDto
+import com.safekart.safekart.data.model.OrderListItem
 import com.safekart.safekart.data.model.PlaceOrderRequest
+import com.safekart.safekart.data.model.toDomain
 import com.safekart.safekart.data.remote.api.CustomerApiService
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -11,9 +13,9 @@ import javax.inject.Singleton
 class OrderRemoteDataSource @Inject constructor(
     private val api: CustomerApiService
 ) {
-    suspend fun getOrders(): Result<List<OrderDto>> = safeCall {
+    suspend fun getOrders(): Result<List<OrderListItem>> = safeCall {
         val res = api.getOrders()
-        if (res.success) Result.success(res.data ?: emptyList())
+        if (res.success) Result.success((res.data ?: emptyList()).map { it.toDomain() })
         else Result.failure(Exception(res.message ?: "Failed to fetch orders"))
     }
 

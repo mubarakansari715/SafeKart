@@ -83,6 +83,7 @@ data class PlaceOrderRequest(
     @SerializedName("payment_method") val paymentMethod: String = "COD",
     val subtotal: Double,
     @SerializedName("shipping_fee") val shippingFee: Double,
-    val total: Double
+    val total: Double,
+    @SerializedName("customer_timezone") val customerTimezone: String = java.time.ZoneId.systemDefault().id
 )
 

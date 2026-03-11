@@ -5,6 +5,7 @@ import com.safekart.safekart.data.model.AddressDto
 import com.safekart.safekart.data.model.ApiResponse
 import com.safekart.safekart.data.model.CartResponse
 import com.safekart.safekart.data.model.OrderDto
+import com.safekart.safekart.data.model.OrderListItemDto
 import com.safekart.safekart.data.model.PlaceOrderRequest
 import com.safekart.safekart.data.model.SaveAddressRequest
 import com.safekart.safekart.data.model.UpdateCartItemRequest
@@ -42,7 +43,7 @@ interface CustomerApiService {
 
     // Orders
     @GET("customer/orders")
-    suspend fun getOrders(): ApiResponse<List<OrderDto>>
+    suspend fun getOrders(): ApiResponse<List<OrderListItemDto>>
 
     @GET("customer/orders/{id}")
     suspend fun getOrderById(@Path("id") id: String): ApiResponse<OrderDto>

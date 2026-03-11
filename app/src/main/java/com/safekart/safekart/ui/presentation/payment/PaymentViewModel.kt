@@ -77,7 +77,7 @@ class PaymentViewModel @Inject constructor(
                 onSuccess = { placed ->
                     cartRepository.clearCart()
                     _uiState.update { it.copy(isPlacingOrder = false) }
-                    _orderPlacedEvent.emit(placed.id)
+                    _orderPlacedEvent.emit(placed.orderNumber.ifBlank { placed.id })
                 },
                 onFailure = { error ->
                     _uiState.update { it.copy(isPlacingOrder = false, error = error.message ?: "Failed to place order") }

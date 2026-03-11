@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,21 +22,29 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.safekart.safekart.data.model.Order
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.safekart.safekart.data.model.OrderListItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersScreen(
     viewModel: OrdersViewModel = hiltViewModel(),
     onBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    OrdersScreenContent(
+        orders = uiState.orders,
+        onBack = onBack
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OrdersScreenContent(
+    orders: List<OrderListItem>,
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,7 +67,7 @@ fun OrdersScreen(
             )
         }
     ) { paddingValues ->
-        if (uiState.orders.isEmpty()) {
+        if (orders.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -105,7 +112,7 @@ fun OrdersScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(uiState.orders, key = { it.id }) { order ->
+                items(orders, key = { it.id }) { order ->
                     OrderCard(order = order)
                 }
             }
@@ -113,13 +120,19 @@ fun OrdersScreen(
     }
 }
 
+@Preview(showBackground = true, showSystemUi = true, name = "Orders – Empty")
 @Composable
-private fun OrderCard(order: Order) {
-    val dateStr = remember(order.createdAt) {
-        SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
-            .format(Date(order.createdAt))
+private fun OrdersScreenEmptyPreview() {
+    MaterialTheme {
+        OrdersScreenContent(
+            orders = emptyList(),
+            onBack = {}
+        )
     }
+}
 
+@Composable
+private fun OrderCard(order: OrderListItem) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -138,11 +151,11 @@ private fun OrderCard(order: Order) {
             ) {
                 Column {
                     Text(
-                        text = "Order #${order.id.take(8).uppercase()}",
+                        text = order.orderNumber,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = dateStr,
+                        text = order.createdAtLocal,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                     )
@@ -164,8 +177,8 @@ private fun OrderCard(order: Order) {
                             .background(Color(0xFFF5F5F5))
                     ) {
                         AsyncImage(
-                            model = item.product.firstImageUrl(),
-                            contentDescription = item.product.title,
+                            model = item.firstImageUrl(),
+                            contentDescription = item.title,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(4.dp),
@@ -177,7 +190,7 @@ private fun OrderCard(order: Order) {
 
             // Items summary
             Text(
-                text = order.items.joinToString(", ") { it.product.title },
+                text = order.items.joinToString(", ") { it.title },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 maxLines = 1,
@@ -194,12 +207,12 @@ private fun OrderCard(order: Order) {
             ) {
                 Column {
                     Text(
-                        text = "${order.items.sumOf { it.quantity }} item(s)  •  ${order.paymentMethod}",
+                        text = "${order.items.sumOf { it.quantity }} item(s)  •  ${order.paymentMethod.uppercase()}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = "₹${order.totalAmount.toInt()}",
+                        text = "₹${order.total.toInt()}",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
@@ -208,7 +221,7 @@ private fun OrderCard(order: Order) {
                     color = Color(0xFFE8F5E9)
                 ) {
                     Text(
-                        text = "Delivering to ${order.address.city}",
+                        text = "Delivering to ${order.shippingAddress.city}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF2E7D32),
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
